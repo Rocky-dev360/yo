@@ -1,0 +1,79 @@
+import { useState } from "react";
+
+function App() {
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+
+  const sendMessage = async () => {
+    if (!input.trim()) return;
+
+    const userMessage = { role: "user", content: input };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+
+    try {
+      const response = await fetch("http://localhost:5000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: input }),
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch response");
+
+      const data = await response.json();
+      const botMessage = { role: "assistant", content: data.reply };
+      setMessages((prev) => [...prev, botMessage]);
+    } catch (error) {
+      alert("Error communicating with AI.");
+    }
+  };
+
+  return (
+    <div className="relative w-full h-screen flex justify-center items-center bg-gradient-to-r from-[#1e1e1e] via-[#121212] to-[#1e1e1e] overflow-hidden">
+      {/* Animated Star Background */}
+      <div className="stars"></div>
+
+      {/* Chat Container */}
+      <div className="w-96 bg-white/10 backdrop-blur-lg rounded-xl shadow-lg flex flex-col overflow-hidden border border-white/20">
+        
+        {/* Chat Header */}
+        <div className="bg-blue-600 text-white text-lg font-bold py-3 text-center">
+          AI Chatbot
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 p-4 overflow-y-auto space-y-3">
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`p-3 rounded-xl max-w-[75%] ${
+                msg.role === "user" ? "bg-blue-600 text-white self-end" : "bg-white/20 text-white self-start"
+              }`}
+            >
+              {msg.content}
+            </div>
+          ))}
+        </div>
+
+        {/* Chat Input */}
+        <div className="flex p-3 border-t border-white/20 bg-white/10">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="flex-1 p-2 bg-transparent border border-white/30 text-white rounded-md focus:outline-none"
+          />
+          <button
+            onClick={sendMessage}
+            className="bg-blue-600 text-white px-4 py-2 ml-2 rounded-md hover:bg-blue-500 transition"
+          >
+            Send
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default App;
